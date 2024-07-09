@@ -69,9 +69,6 @@ sudo systemctl daemon-reload #instructs systemd to re-read all unit files
 sudo systemctl enable crio --now
 sudo systemctl start crio.service
 
-#Overriding the sandbox (pause) image
-
-
 #Installing kubeadm, kubelet and kubectl 
 
 sudo apt-get update
