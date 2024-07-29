@@ -44,33 +44,31 @@ aws ec2 create-route --route-table-id ${ROUTE_TABLE_ID} --destination-cidr-block
 SECURITY_GROUP_ID=$(aws ec2 create-security-group --group-name $SG_NAME --description "Kubernetes from scratch - security group" --vpc-id ${VPC_ID} --output text --query 'GroupId')
 aws ec2 create-tags --resources ${SECURITY_GROUP_ID} --tags Key=Name,Value=$SG_NAME
 
-# Optimized security group rules
-declare -A SEC_RULES=(
-  [22]="tcp 0.0.0.0/0"
-  [6443]="tcp 0.0.0.0/0"
-  [443]="tcp 0.0.0.0/0"
-  [-1]="icmp 0.0.0.0/0"
-  [179]="tcp $CIDR_BLOCK"
-  [4789]="udp $CIDR_BLOCK"
-  [5473]="tcp $CIDR_BLOCK"
-  [51820]="udp $CIDR_BLOCK"
-  [51821]="udp $CIDR_BLOCK"
-  [2379]="tcp $CIDR_BLOCK"
-  [2380]="tcp $CIDR_BLOCK"
-  [10251]="tcp $CIDR_BLOCK"
-  [10252]="tcp $CIDR_BLOCK"
-  [10250]="tcp $CIDR_BLOCK"
-  [10257]="tcp $CIDR_BLOCK"
-  [10259]="tcp $CIDR_BLOCK"
-  [10256]="tcp $CIDR_BLOCK"
-  [1433]="tcp $CIDR_BLOCK"
+SEC_RULES=(
+  "22 tcp 0.0.0.0/0"
+  "6443 tcp 0.0.0.0/0"
+  "443 tcp 0.0.0.0/0"
+  "-1 icmp 0.0.0.0/0"
+  "179 tcp $CIDR_BLOCK"
+  "4789 udp $CIDR_BLOCK"
+  "5473 tcp $CIDR_BLOCK"
+  "51820 udp $CIDR_BLOCK"
+  "51821 udp $CIDR_BLOCK"
+  "2379 tcp $CIDR_BLOCK"
+  "2380 tcp $CIDR_BLOCK"
+  "10251 tcp $CIDR_BLOCK"
+  "10252 tcp $CIDR_BLOCK"
+  "10250 tcp $CIDR_BLOCK"
+  "10257 tcp $CIDR_BLOCK"
+  "10259 tcp $CIDR_BLOCK"
+  "10256 tcp $CIDR_BLOCK"
+  "1433 tcp $CIDR_BLOCK"
 )
 
-for port in "${!SEC_RULES[@]}"; do
-  IFS=" " read -r proto cidr <<< "${SEC_RULES[$port]}"
+for rule in "${SEC_RULES[@]}"; do
+  IFS=" " read -r port proto cidr <<< "$rule"
   aws ec2 authorize-security-group-ingress --group-id ${SECURITY_GROUP_ID} --protocol $proto --port $port --cidr $cidr
 done
-
 brew install jq
 
 IMAGE_ID=$(aws ec2 describe-images \
@@ -96,6 +94,8 @@ for ((i=0; i<$CONTROLLER_COUNT; i++)); do
     --user-data "name=${CONTROLLER_NAME_PREFIX}-${i}" \
     --subnet-id "$SUBNET_ID" \
     --block-device-mappings "{\"DeviceName\": \"$DEVICE_NAME\", \"Ebs\": { \"VolumeSize\": $VOLUME_SIZE }, \"NoDevice\": \"\" }" \
+    --region "ap-south-1" \
+    --placement "AvailabilityZone=ap-south-1a" \
     --output text --query 'Instances[].InstanceId')
 
   aws ec2 modify-instance-attribute --instance-id "$instance_id" --no-source-dest-check
@@ -116,6 +116,8 @@ for ((i=0; i<$WORKER_COUNT; i++)); do
     --user-data "name=${WORKER_NAME_PREFIX}-${i}|pod-cidr=10.200.${i}.0/24" \
     --subnet-id "$SUBNET_ID" \
     --block-device-mappings "{\"DeviceName\": \"$DEVICE_NAME\", \"Ebs\": { \"VolumeSize\": $VOLUME_SIZE }, \"NoDevice\": \"\" }" \
+    --region "ap-south-1" \
+    --placement "AvailabilityZone=ap-south-1a" \
     --output text --query 'Instances[].InstanceId')
 
   aws ec2 modify-instance-attribute --instance-id "$instance_id" --no-source-dest-check
