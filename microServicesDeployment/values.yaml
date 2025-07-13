@@ -1,0 +1,113 @@
+replicaCount: 1
+
+imagePullSecrets:
+  - name: ecr-credentials
+
+global:
+  tag: latest
+  namespace: myservices
+  imagePullPolicy: Always
+  host: ajayedupuganti.in
+  tls:
+    enabled: true
+    secretName: myservices-tls-secret
+    hosts:
+      - ajayedupuganti.in
+
+services:
+  main-service:
+    image: repo.dkr.ecr.ap-south-1.amazonaws.com/product/main-service
+    tag: latest
+    type: NodePort
+    ports:
+      - port: 8080
+        nodePort: 31311
+    replicas: 2
+    hpa:
+      minReplicas: 4
+      maxReplicas: 10
+      cpuTarget: 50
+    resources:
+      requests:
+        cpu: ".8"
+        memory: "1.5Gi"
+      limits:
+        cpu: "1"
+        memory: "2.5Gi"
+    envSecrets:
+      - redis-secret
+      - database-secret
+      - rabbitmq
+    envConfigMaps:
+      - main-service-configmap
+
+  gateway:
+    image: repo.dkr.ecr.ap-south-1.amazonaws.com/product/gateway
+    tag: latest
+    ports:
+      - 8080
+      - 8081
+
+    envSecrets:
+      - gateway-secrets
+      - redis-secret
+      - database-secret
+    envConfigMaps:
+      - gateway-configmap
+
+    volumes:
+      - name: gateway-volume
+        mountPath: /db
+        pvc: gateway-pvc
+    volumeMounts:
+      - name: gateway-volume
+        mountPath: /db
+
+configMaps:
+  gateway:
+    JWT_EXPIRATION_TIME: "9000"
+    HOST: "ajayedupuganti.in"
+    PROTOCOL: "https"
+    WS_PROTOCOL: "wss"
+
+  main-service-configmap:
+    EMAIL_ALERTS_LOGGER: "app/logs/email_alert_service.log"
+    SMS_ALERTS_LOGGER: "app/logs/sms_alert_service.log"
+    NOTIFICATION_ALERTS_LOGGER: "app/logs/notification_alert_service.log"
+    REDIS_ALERTS_LOGGER: "app/logs/redis_alert_service.log"
+
+secrets:
+  database-secret:
+    DATABASE_USERNAME: ""
+    DATABASE_PASSWORD: ""
+    SERVER: ""
+    DATABASE_SERVER: ""
+    DATABASE: ""
+    ENVIRONMENT: ""
+
+  redis-secret:
+    REDIS_HOST: "redis-master"
+    REDIS_PORT: "6379"
+    REDIS_PASSWORD: ""
+
+  rabbitmq:
+    RABBITMQ_PASSWORD: ""
+    RABBITMQ_USERNAME: ""
+    RABBITMQ_PROTOCOL: "amqp"
+    RABBITMQ_HOSTNAME: "rabbitmq"
+    RABBITMQ_PORT: "5672"
+    rabbitmq-erlang-cookie: "secretcookie"
+    rabbitmq-password: ""
+    rabbitmq-username: ""
+
+  gateway-secrets:
+    ACCESS_TOKEN_SECRET: "your_access_tokensecret"
+    REFRESH_TOKEN_SECRET: "your_refresh_token_secret"
+
+pvcs:
+  main-service-pvc:
+    accessMode: ReadWriteOnce
+    storage: 100Mi
+  gateway-pvc:
+    accessMode: ReadWriteOnce
+    storage: 100Mi

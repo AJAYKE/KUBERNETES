@@ -1,0 +1,30 @@
+global:
+  redis:
+    password: "password"
+
+architecture: "replication"
+auth:
+  enabled: true
+
+replica:
+  replicaCount: 3
+  persistence:
+    enabled: true
+    storageClass: "ebs-sc"
+    size: 5Gi
+
+sentinel:
+  enabled: true
+  replicas: 3
+
+master:
+  persistence:
+    enabled: true
+    storageClass: "ebs-sc"
+    size: 5Gi
+
+replica:
+  persistence:
+    enabled: true
+    storageClass: "ebs-sc"
+    size: 5Gi

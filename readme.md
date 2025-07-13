@@ -1,66 +1,56 @@
-# SIMPLE KUBERNETES DEPLOYMENT ON AWS INSTANCES.
+# Kubernetes Infrastructure Setup
 
-First create an aws account and then an I AM user, get access key and secret key. you can find tonnes of youtube tutorials on this. Then run
+Complete Kubernetes infrastructure setup with monitoring, storage, messaging, and deployment tools.
 
-```bash
-aws configure
-```
+## Cluster Setup
 
-Then give access key and secret access key. Now we can start.
-Go to aws.sh file and update your region there and just run that script on your machine.
-At line 74, I have used _brew install jq_ coz am on mac, update accordingly for your machine, for windows you need chocolaty and linux sudo apt. If you want to change any other values, you can edit the values at the start. If you are editing the CIDR block, edit the instances ip address too.
-Thats it, Run the script.
+- **[Cluster Setup](clusterSetup/)** - AWS cluster initialization and configuration
 
-This script will take upto a minute, in between i added sleep for 20 seconds, the instance should be create by this time and you should get your ssh commands, if not go to your aws account, ec2 section and you will find two new instances, get public ips of these two machines and ssh into them. you will have ur rsa key in the same folder downloaded.
+## Storage & Persistence
 
-Now ssh into both the systems decide one of them as master and other one as worker.
-Now create two files on master instance and one file on worker instance.
+- **[AWS CSI Driver](awsCsiDriver/)** - EBS storage for Kubernetes
+- **[Longhorn](longhorn/)** - Distributed block storage
+- **[MinIO](minio/)** - Object storage solution
 
-```bash
-nano common.sh
-```
+## Networking & Load Balancing
 
-copy paste the common.sh file in that
+- **[MetalLB](metallb/)** - Load balancer for bare metal clusters
+- **[NGINX Ingress](nginxIngress/)** - Ingress controller (LoadBalancer/NodePort)
+- **[Update NodePort Range](updateNodePortRange/)** - Customize NodePort range
 
-```bash
-chmod +x common.sh
-```
+## Monitoring & Observability
 
-```bash
-./common.sh
-```
+- **[Prometheus & Log Collection](prometheusAndLogCollection/)** - Metrics and logging stack
+- **[Metrics Server](metrics_server/)** - Kubernetes metrics API
 
-On master node
+## Messaging & Communication
 
-```bash
-nano master.sh
-```
+- **[MQTT](mqtt/)** - Message queuing telemetry transport
+- **[RabbitMQ](rabbitmq/)** - Message broker
+- **[Kafka](kafka/)** - Distributed streaming platform
+- **[Redis](redis/)** - In-memory data store (standalone/cluster)
 
-copy paste the master.sh file in that
+## Deployment & CI/CD
 
-```bash
-chmod +x master.sh
-```
+- **[ArgoCD](argocd/)** - GitOps continuous delivery
+- **[Microservices Deployment](microServicesDeployment/)** - Multi-service Helm chart
+- **[ECR Secret Reset Cronjob](ecrSecretResetCronjob/)** - Auto-refresh ECR tokens
 
-And then on master run run master.sh file
+## Development Tools
 
-```bash
-./master.sh
-```
+- **[Helm](helm/)** - Kubernetes package manager
 
-At the end you will get a token in the form of
+## Quick Start
 
-```bash
-kubeadm join <master_ip>:6443 --token sometokein --discovery-token-ca-c
-ert-hash sha256:81cac80fb363b14..someencoded thing
-```
+1. **Setup Cluster**: Start with [Cluster Setup](clusterSetup/)
+2. **Configure Storage**: Install [AWS CSI Driver](awsCsiDriver/) or [Longhorn](longhorn/)
+3. **Setup Networking**: Deploy [MetalLB](metallb/) and [NGINX Ingress](nginxIngress/)
+4. **Add Monitoring**: Install [Prometheus](prometheusAndLogCollection/) and [Metrics Server](metrics_server/)
+5. **Deploy Applications**: Use [Microservices Deployment](microServicesDeployment/) or individual services
 
-Now copy paste this command on your worker nodes. Thats it your cluster will be up and running
+## Prerequisites
 
-```bash
-kubectl get nodes -o wide
-```
-
-```bash
-kubectl get pods -A
-```
+- Kubernetes cluster
+- Helm installed
+- kubectl configured
+- AWS credentials (for AWS services)

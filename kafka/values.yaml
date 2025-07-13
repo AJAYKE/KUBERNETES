@@ -1,0 +1,27 @@
+replicaCount: 3  # Single Kafka broker
+
+controller:
+  replicaCount: 3 # One controller in KRaft mode
+
+kraft:
+  enabled: true  # Enable KRaft mode (no ZooKeeper)
+
+auth:
+  enabled: false  # No auth for simplicity
+
+listeners:
+  client:
+    protocol: PLAINTEXT
+  interbroker:
+    protocol: PLAINTEXT
+  controller:
+    protocol: PLAINTEXT
+
+persistence:
+  enabled: true
+  size: 8Gi
+
+overrideConfiguration: |
+  log.retention.hours=8760
+  log.segment.bytes=1073741824
+  log.retention.check.interval.ms=300000

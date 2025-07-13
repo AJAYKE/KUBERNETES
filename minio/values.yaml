@@ -1,0 +1,80 @@
+tenant:
+  name: myminio
+  image:
+    repository: quay.io/minio/minio
+    tag: RELEASE.2025-04-08T15-41-24Z
+    pullPolicy: IfNotPresent
+  imagePullSecret: {}
+  initContainers: []
+  scheduler: {}
+  configSecret:
+    name: myminio-env-configuration
+    accessKey: minio # Access key
+    secretKey: minio123 # Secret key
+    #existingSecret: true
+  poolsMetadata:
+    annotations: {}
+    labels: {}
+
+  pools:
+    - servers: 1
+      name: pool-0
+      volumesPerServer: 1
+      size: 10Gi # Volume size
+      storageAnnotations: {}
+      storageLabels: {}
+      annotations: {}
+      labels: {}
+      tolerations: []
+      nodeSelector: {}
+      affinity: {}
+      resources: {}
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: "OnRootMismatch"
+        runAsNonRoot: true
+      containerSecurityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints: []
+  mountPath: /export # Mount path
+  subPath: /data # Sub path
+  metrics:
+    enabled: false
+    port: 9000
+    protocol: http
+  certificate:
+    requestAutoCert: false
+    externalCertSecret: []
+    externalCaCertSecret: []
+    certConfig: {}
+  features:
+    bucketDNS: false
+    domains: {}
+    enableSFTP: false
+  buckets: []
+  users: []
+  podManagementPolicy: Parallel
+  liveness: {}
+  startup: {}
+  lifecycle: {}
+  exposeServices: {}
+  serviceAccountName: ""
+  prometheusOperator: false
+  logging: {}
+  serviceMetadata: {}
+  env:
+    - name: CONSOLE_MINIO_SERVER
+      value: http://myminio-hl:9000 # MinIO server URL
+  priorityClassName: ""
+  additionalVolumes: []
+  additionalVolumeMounts: []

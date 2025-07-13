@@ -1,0 +1,23 @@
+auth:
+  username: "admin"
+  password: "adminpassword"
+  erlangCookie: "secretcookie"
+
+persistence:
+  enabled: true
+  size: "100Mi"
+  storageClass: "ebs-sc"
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+
+extraConfiguration: |
+  log.console = true
+  log.console.level = info
+
+management:
+  enabled: true
+  service:
+    type: ClusterIP

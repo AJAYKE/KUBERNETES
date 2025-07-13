@@ -1,0 +1,28 @@
+architecture: "standalone"
+auth:
+  enabled: false
+  sentinel: false
+
+usePassword: false
+
+commonConfiguration: |
+  maxmemory 700mb
+  maxmemory-policy allkeys-lru
+
+master:
+  persistence:
+    enabled: true
+    size: "500Mi"
+  service:
+    type: "NodePort"
+    nodePorts:
+      redis: "30079"
+  resources:
+    limits:
+      memory: "1Gi"
+    requests:
+      memory: "1Gi"
+  # service:
+  #   type: "NodePort"
+  #   nodePorts:
+  #     redis: "30079"

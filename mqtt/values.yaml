@@ -1,0 +1,36 @@
+image:
+  repository: eclipse-mosquitto
+  tag: 2.0.18
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    enabled: true
+    type: NodePort # Options: ClusterIP, NodePort, LoadBalancer
+    ports:
+      mqtt:
+        enabled: true
+        port: 1883
+        nodePort: 1883
+      websocket:
+        enabled: false # Enable if using MQTT over WebSockets
+
+persistence:
+  data:
+    enabled: true
+    accessMode: ReadWriteOnce
+    storageClass: "your-storage-class"
+    size: 1Gi
+
+securityContext:
+  runAsUser: 1883
+  runAsGroup: 1883
+  fsGroup: 1883
+
+config:
+  mosquitto.conf: |
+    persistence true
+    persistence_location /mosquitto/data/
+    log_dest stdout
+    allow_anonymous true
+    listener 1883

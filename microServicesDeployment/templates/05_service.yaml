@@ -1,0 +1,30 @@
+{{- range $name, $service := .Values.services }}
+{{- if $service.ports }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.global.namespace }}
+spec:
+  selector:
+    app: {{ $name }}
+  ports:
+    {{- range $index, $port := $service.ports }}
+    - name: port-{{ $index }}
+      protocol: TCP
+      port: {{- if kindIs "map" $port }} {{ $port.port }} {{- else }} {{ $port }} {{- end }}
+      targetPort: {{- if kindIs "map" $port }} {{ $port.targetPort | default $port.port }} {{- else }} {{ $port }} {{- end }}
+      {{- if and (kindIs "map" $port) ($port.nodePort) }}
+      nodePort: {{ $port.nodePort }}
+      {{- end }}
+    {{- end }}
+  type: {{- if eq $service.type "NodePort" }} NodePort
+        {{- else if eq $service.type "LoadBalancer" }} LoadBalancer
+        {{- else }} ClusterIP
+        {{- end }}
+  {{- if and (eq $service.type "LoadBalancer") $service.loadBalancerIP }}
+  loadBalancerIP: {{ $service.loadBalancerIP }}
+  {{- end }}
+---
+{{- end }}
+{{- end }}

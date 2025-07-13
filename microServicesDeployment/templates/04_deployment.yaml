@@ -1,0 +1,98 @@
+{{- range $name, $service := .Values.services }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    app: {{ $name }}
+spec:
+  replicas: {{ $service.replicas | default $.Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: {{ $service.image }}:{{ $service.tag | default $.Values.global.tag }}
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+
+          # Handling multiple ports
+          ports:
+            {{- range $port := $service.ports }}
+            - containerPort: {{- if kindIs "map" $port }} {{ $port.port | int }} {{- else }} {{ $port | int }} {{- end }}
+            {{- end }}
+ 
+          # Handling envFrom (secrets & configMaps)
+          {{- if or $service.envSecrets $service.envConfigMaps }}
+          envFrom:
+            {{- range $secret := $service.envSecrets }}
+            - secretRef:
+                name: {{ $secret }}-{{ $.Values.global.namespace }}
+            {{- end }}
+            {{- range $config := $service.envConfigMaps }}
+            - configMapRef:
+                name: {{ $config }}-{{ $.Values.global.namespace }}
+            {{- end }}
+          {{- end }}
+
+          # Handling normal env variables
+          {{- if $service.env }}
+          env:
+            {{- range $env := $service.env }}
+            - name: {{ $env.name }}
+              value: "{{ $env.value }}"
+            {{- end }}
+          {{- end }}
+
+          # Handling resources
+          {{- if $service.resources }}
+          resources:
+            {{- if $service.resources.requests }}
+            requests:
+              {{- if $service.resources.requests.cpu }}
+              cpu: "{{ $service.resources.requests.cpu }}"
+              {{- end }}
+              {{- if $service.resources.requests.memory }}
+              memory: "{{ $service.resources.requests.memory }}"
+              {{- end }}
+            {{- end }}
+            {{- if $service.resources.limits }}
+            limits:
+              {{- if $service.resources.limits.cpu }}
+              cpu: "{{ $service.resources.limits.cpu }}"
+              {{- end }}
+              {{- if $service.resources.limits.memory }}
+              memory: "{{ $service.resources.limits.memory }}"
+              {{- end }}
+            {{- end }}
+          {{- end }}
+
+          # Handling volume mounts
+          {{- if $service.volumeMounts }}
+          volumeMounts:
+            {{- range $mount := $service.volumeMounts }}
+            - name: {{ $mount.name }}
+              mountPath: {{ $mount.mountPath }}
+            {{- end }}
+          {{- end }}
+
+      imagePullSecrets:
+        - name: ecrscr-credentials
+      
+      {{- if $service.volumes }}
+      volumes:
+        {{- range $volume := $service.volumes }}
+        - name: {{ $volume.name }}
+          {{- if $volume.pvc }}
+          persistentVolumeClaim:
+            claimName: {{ $volume.pvc }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+---
+{{- end }}

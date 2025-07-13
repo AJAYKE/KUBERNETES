@@ -1,0 +1,40 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: websocket-ingress
+  namespace: { { $.Values.global.namespace } }
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/server-snippets: |
+      location / {
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+        proxy_set_header Connection "upgrade";
+        proxy_cache_bypass $http_upgrade;
+      }
+spec:
+  ingressClassName: nginx
+  {{- if $.Values.global.tls.enabled }}
+  tls:
+    - hosts:
+        {{- range $.Values.global.tls.hosts }}
+        - { { . } }
+        {{- end }}
+      secretName: { { $.Values.global.tls.secretName } }
+  {{- end }}
+  rules:
+    - host: { { $.Values.global.host } }
+      http:
+        paths:
+          - path: /api//socket.io
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 8080

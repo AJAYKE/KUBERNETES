@@ -1,0 +1,45 @@
+# prometheus:
+#   service:
+#     type: NodePort
+#     nodePort: 32090
+
+# grafana:
+#   service:
+#     type: NodePort
+#     nodePort: 32091
+
+# alertmanager:
+#   service:
+#     type: NodePort
+#     nodePort: 32092
+prometheus:
+  service:
+    enabled: true
+    type: ClusterIP
+  prometheusSpec:
+    retention: 10d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+grafana:
+  service:
+    enabled: true
+    type: ClusterIP
+
+alertmanager:
+  service:
+    enabled: true
+    type: ClusterIP
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
